@@ -21,7 +21,9 @@ O projeto inclui três jogos em um mini-arcade e uma tela de desenho (lousa mág
 O código foi refatorado para uma estrutura limpa e modular:
 
 ├── index.html       # Estrutura HTML principal
+
 ├── style.css        # Todos os estilos customizados (CSS puro)
+
 └── script.js        # Toda a lógica de JavaScript (navegação e jogos)
 
 ## 🛠️ Tecnologias Utilizadas
@@ -50,4 +52,5 @@ A licença MIT permite que outras pessoas usem, copiem, modifiquem e distribuam 
 **Em termos simples, isso significa que:**
 
 * Você permite que outros usem e até vendam projetos com base no seu código.
+
 * **Eles não podem remover seu nome** ou o aviso de direitos autorais, **garantindo que você sempre receba o crédito pela criação original**, mesmo que façam alterações.
