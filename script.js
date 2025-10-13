@@ -135,8 +135,8 @@ function resizeCanvas() {
     tempCtx.drawImage(canvasLousa, 0, 0);
 
     // Ajusta o tamanho da canvas
-    canvasLousa.width = slateSection.clientWidth - 16;
-    canvasLousa.height = Math.min(canvasLousa.width * 0.7, 400);
+    canvasLousa.width = slateSection.clientWidth;
+    canvasLousa.height = Math.min(canvasLousa.width * 0.7 , window.innerHeight * 0.5);
 
     // Redesenha o conteúdo anterior
     ctxLousa.drawImage(tempCanvas, 0, 0);
@@ -371,4 +371,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tttResetButton) tttResetButton.addEventListener('click', initTicTacToeGame);
 
     showInitialScreen(); // Garante que a tela inicial seja exibida primeiro
+
 });
