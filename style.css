@@ -119,4 +119,23 @@ body, button, .card, .game-card, .ttt-cell {
     color: #5A3E98; cursor: pointer; transition: background-color 0.1s; border-radius: 8px;
 }
 .ttt-cell:hover:not(.occupied) { background-color: #ffe4e6; }
+
 .ttt-cell.occupied { cursor: default; }
+
+/* --- MELHORIAS DE RESPONSIVIDADE PARA CANVAS --- */
+
+/* Aplica width: 100% para Lousa e Cobrinha */
+#drawingCanvas, #snakeCanvas {
+    /* Força o canvas a ocupar a largura total do seu container */
+    width: 100% !important; 
+    height: auto !important;
+    /* Garante que o canvas não exceda o tamanho nativo em telas gigantes */
+    max-width: 400px; 
+    margin: 0 auto; 
+    display: block; 
+}
+
+/* Sobrescreve a largura máxima da Lousa para usar mais espaço (até o limite do main-card) */
+#drawingCanvas {
+    max-width: 100%; 
+}
