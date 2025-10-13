@@ -124,18 +124,34 @@ body, button, .card, .game-card, .ttt-cell {
 
 /* --- MELHORIAS DE RESPONSIVIDADE PARA CANVAS --- */
 
-/* Aplica width: 100% para Lousa e Cobrinha */
+/* Ajusta o container da Lousa e Cobrinha para usar mais espaço no celular */
+.game-container {
+    padding: 0.5rem !important; /* Reduz o padding interno do container */
+    max-width: 100% !important; /* Garante que ocupe a largura total do main-card */
+}
+
+/* Força o Canvas a ocupar 100% do container e resolve problemas de visualização */
 #drawingCanvas, #snakeCanvas {
-    /* Força o canvas a ocupar a largura total do seu container */
     width: 100% !important; 
     height: auto !important;
-    /* Garante que o canvas não exceda o tamanho nativo em telas gigantes */
-    max-width: 400px; 
-    margin: 0 auto; 
+    
+    /* Na Lousa, queremos que ela se estique */
+    max-width: 100% !important;
+    
+    /* No Cobrinha, queremos que ele se limite a 400px, mas não atrapalhe a Lousa */
+    /* Como o container do Cobrinha (game-container) já é controlado, isso deve bastar */
+    /* Remova a margin-top fixada se estiver causando desalinhamento (não está no seu CSS atual, mas é uma verificação) */
+    margin: 10px auto; 
     display: block; 
 }
 
-/* Sobrescreve a largura máxima da Lousa para usar mais espaço (até o limite do main-card) */
-#drawingCanvas {
-    max-width: 100%; 
+/* Ajuste específico para a Cobrinha */
+#snakeCanvas {
+    max-width: 400px; /* Limita o tamanho máximo para manter a proporção em telas grandes */
+}
+
+/* Ajuste para alinhar os controles da cobrinha (se estiverem desalinhados) */
+/* O `controls-grid` está dentro de `flex-col items-center`, o que deve centralizá-lo. */
+.controls-grid {
+    margin: 10px auto; /* Centraliza a grade de botões de controle */
 }
