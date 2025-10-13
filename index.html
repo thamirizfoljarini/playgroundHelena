@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dia das Crianças! - Jogos e Lousa Mágica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        // Cores inspiradas no design
+                        'primary-blue': '#64C5F0',
+                        'primary-pink': '#FF8E9E',
+                        'title-purple': '#5A3E98',
+                        'snake-green': '#3CB371',
+                        'snake-red': '#E57373',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="font-sans">
+
+    <div class="absolute top-5 left-10 text-3xl opacity-80 pointer-events-none text-yellow-400">⭐️</div>
+    <div class="absolute bottom-20 right-10 text-3xl opacity-80 pointer-events-none text-yellow-400">🌟</div>
+
+    <div id="mainContent" class="main-card">
+        
+        <div id="initialScreen">
+            <h1 id="homeTitle" class="text-center text-5xl md:text-6xl font-black text-title-purple mb-8 leading-none cursor-pointer" title="Voltar ao Início">
+                <span class="title-text">Dia das</span><br>
+                <span class="title-text text-primary-pink" style="animation-delay: 0.1s;">Crianças!</span>
+            </h1>
+            <div class="flex justify-center space-x-12 mb-10">
+                <span role="img" aria-label="Foguete" class="text-3xl" style="transform: rotate(-20deg);">🚀</span>
+                <span role="img" aria-label="Ursinho" class="text-3xl" style="transform: rotate(10deg);">🧸</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                <button id="gamesButton" class="btn-base btn-games text-white text-xl font-bold py-5 px-6 rounded-3xl shadow-lg flex items-center justify-center space-x-3">
+                    <span class="text-2xl">🕹️</span><span>Arcade Infantil!</span>
+                </button>
+                <button id="slateButton" class="btn-base btn-slate text-white text-xl font-bold py-5 px-6 rounded-3xl shadow-lg flex items-center justify-center space-x-3">
+                    <span class="text-2xl">🖍️</span><span>Lousa Mágica!</span>
+                </button>
+            </div>
+            <div class="flex justify-around items-end mt-8">
+                <span role="img" class="text-4xl sm:text-5xl">🎈🦁</span>
+                <span role="img" class="text-4xl sm:text-5xl">🐘🎁</span>
+                <span role="img" class="text-4xl sm:text-5xl">🦒😊</span>
+            </div>
+        </div>
+        
+        <div id="gamesSection" class="hidden flex-col items-center">
+            <h2 id="sectionTitle" class="text-3xl font-bold text-primary-blue mb-6 text-center"></h2>
+            
+            <div id="gameSelectionScreen" class="w-full">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="game-card bg-primary-blue" data-game="memory">
+                        <span class="text-5xl mb-2 block">🧠</span>
+                        <h3 class="text-2xl font-black">Jogo da Memória</h3>
+                        <p class="text-sm mt-2 opacity-90">Encontre os pares de emojis!</p>
+                    </div>
+                    <div class="game-card bg-snake-green" data-game="snake">
+                        <span class="text-5xl mb-2 block">🐍</span>
+                        <h3 class="text-2xl font-black">Cobrinha Clássica</h3>
+                        <p class="text-sm mt-2 opacity-90">Coma as maçãs para crescer!</p>
+                    </div>
+                    <div class="game-card bg-primary-pink" data-game="tictactoe">
+                        <span class="text-5xl mb-2 block">❌⭕</span>
+                        <h3 class="text-2xl font-black">Jogo da Velha</h3>
+                        <p class="text-sm mt-2 opacity-90">Tente formar uma linha!</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="backToHomeButton" class="bg-title-purple hover:bg-primary-blue text-white font-bold py-2 px-4 rounded-full shadow-md mt-6">
+                🏠 Voltar para o Início
+            </button>
+            
+            <div id="memoryContainer" class="game-container hidden w-full max-w-xl p-4 rounded-xl bg-white shadow-inner">
+                <button id="backToGameSelectionMemory" class="bg-title-purple hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-md mb-4">◀️ Voltar</button>
+                <p id="instructionDisplay" class="text-lg font-semibold text-gray-700 mb-4 h-6 text-center">Clique em Iniciar!</p>
+                <p id="scoreDisplay" class="text-xl font-semibold text-gray-700 mb-4 text-center">Pares: 0 / 8</p>
+                <div id="memoryGrid" class="memory-grid mb-6"></div>
+                <div class="flex justify-center gap-3 mt-4">
+                    <button id="startGameButton" class="bg-primary-blue hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg">⭐ Iniciar Jogo! ⭐</button>
+                    <button id="resetGameButton" class="hidden bg-primary-pink hover:bg-red-500 text-white font-bold py-3 px-6 rounded-full shadow-lg">🔄 Reiniciar</button>
+                </div>
+            </div>
+            
+            <div id="snakeContainer" class="game-container hidden w-full max-w-xl p-4 rounded-xl bg-white shadow-inner">
+                 <button id="backToGameSelectionSnake" class="bg-title-purple hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-md mb-4">◀️ Voltar</button>
+                <p id="snakeStatus" class="text-lg font-semibold text-gray-700 mb-4 h-6 text-center">Clique em Iniciar!</p>
+                <p id="snakeScore" class="text-xl font-semibold text-gray-700 mb-4 text-center">Maçãs: 0</p>
+                <canvas id="snakeCanvas" width="400" height="400" class="border-4 border-title-purple bg-blue-50 rounded-lg mx-auto block"></canvas>
+                <div class="flex flex-col items-center mt-6">
+                    <button id="snakeStartButton" class="bg-snake-green hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg mb-4">▶️ Iniciar</button>
+                    <div class="controls-grid sm:hidden">
+                        <button id="upButton" class="dir-button">▲</button>
+                        <button id="leftButton" class="dir-button">◀</button>
+                        <button id="rightButton" class="dir-button">▶</button>
+                        <button id="downButton" class="dir-button">▼</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tictactoeContainer" class="game-container hidden w-full max-w-xl p-4 rounded-xl bg-white shadow-inner">
+                <button id="backToGameSelectionTicTacToe" class="bg-title-purple hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-md mb-4">◀️ Voltar</button>
+                <p id="tttStatus" class="text-xl font-bold text-gray-700 mb-4 h-6 text-center">Clique em Reiniciar!</p>
+                <div id="tictactoeGrid" class="grid grid-cols-3 gap-2 w-full max-w-[300px] mx-auto mb-6"></div>
+                <button id="tttResetButton" class="bg-title-purple hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-lg mx-auto block mt-4">🔄 Reiniciar</button>
+            </div>
+        </div>
+
+        <div id="slateSection" class="hidden flex-col items-center">
+            <h2 class="text-3xl font-bold text-primary-pink mb-4">✨ Sua Lousa Mágica ✨</h2>
+            <canvas id="drawingCanvas" class="w-full max-w-full" width="560" height="300"></canvas>
+            <div class="flex flex-wrap justify-center items-center gap-3 mt-4">
+                <label for="colorPicker" class="text-sm font-medium">Cor:</label>
+                <input type="color" id="colorPicker" value="#5A3E98" class="h-10 w-10 p-0.5 border-2 rounded-full cursor-pointer">
+                <label for="sizeSlider" class="text-sm font-medium ml-2">Tamanho:</label>
+                <input type="range" id="sizeSlider" min="2" max="20" value="8" class="h-10 w-24 cursor-pointer accent-primary-pink">
+                <button id="clearCanvasButton" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full shadow-md">Limpar</button>
+                <button id="backToHomeSlate" class="bg-title-purple hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-md">Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

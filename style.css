@@ -1,0 +1,122 @@
+/* style.css */
+
+/* Importação da fonte Inter */
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap'); */ 
+/* OBS: Foi movida para o <head> do HTML para melhor carregamento */
+        
+/* Fundo com gradiente suave */
+body {
+    background: linear-gradient(135deg, #FFDDE1 0%, #C3E9FF 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* MELHORIA: Previne a seleção de texto em dispositivos móveis, melhorando a jogabilidade */
+body, button, .card, .game-card, .ttt-cell {
+    user-select: none; /* Padrão */
+    -webkit-user-select: none; /* Para Safari */
+    -moz-user-select: none; /* Para Firefox */
+    -ms-user-select: none; /* Para Internet Explorer/Edge */
+}
+
+/* Estilo da caixa principal para imitar o visual da imagem */
+.main-card {
+    position: relative;
+    background-color: white;
+    border-radius: 2.5rem;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 12px rgba(255, 255, 255, 0.4); 
+    border: 4px solid rgba(255, 255, 255, 0.8);
+    max-width: 750px; 
+    width: 100%;
+    overflow: hidden;
+    z-index: 10;
+}
+
+/* Estilos dos botões com gradiente e animação de clique */
+.btn-games { background: linear-gradient(90deg, #64C5F0 0%, #17A2B8 100%); transition: transform 0.1s ease; }
+.btn-slate { background: linear-gradient(90deg, #FF8E9E 0%, #FF607F 100%); transition: transform 0.1s ease; }
+.btn-base { box-shadow: 0 4px 0 #5A3E98; border-bottom: 2px solid #3d2a63; }
+.btn-base:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #5A3E98; }
+.btn-base:active { transform: translateY(2px); box-shadow: 0 2px 0 #5A3E98; }
+
+/* Animação para o título */
+.title-text { display: inline-block; animation: bounceIn 0.8s ease-out; }
+
+@keyframes bounceIn {
+    0% { opacity: 0; transform: scale(0.3); }
+    50% { opacity: 1; transform: scale(1.1); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+/* Estilo para a área de desenho */
+#drawingCanvas {
+    border: 2px dashed #FF607F;
+    background-color: #fcfcfc;
+    touch-action: none; /* Essencial para o desenho em telas de toque */
+}
+
+/* --- Estilos dos Cards de Seleção de Jogo --- */
+.game-card {
+    border-radius: 1.5rem; padding: 1.5rem; color: white; cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease; text-align: center;
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.15); border-bottom: 5px solid rgba(0, 0, 0, 0.2);
+}
+.game-card:hover { transform: translateY(-5px); box-shadow: 0 10px 0 rgba(0, 0, 0, 0.15); }
+.game-card:active { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.15); }
+
+/* --- Estilos do Jogo da Memória --- */
+.memory-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    width: 100%; max-width: 450px; margin: 0 auto; perspective: 1000px;
+}
+.memory-grid.locked { pointer-events: none; opacity: 0.8; }
+.card {
+    background-color: #f0f0f0; border-radius: 10px; aspect-ratio: 1 / 1; cursor: pointer;
+    position: relative; transform-style: preserve-3d; transition: transform 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.card.flipped { transform: rotateY(180deg); }
+.card.match {
+    background-color: #90EE90; cursor: default; pointer-events: none;
+    transform: rotateY(180deg) scale(0.98); opacity: 1; box-shadow: 0 0 10px #3CB371;
+}
+.card-face {
+    position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    backface-visibility: hidden; border-radius: 10px; font-size: 3rem; padding: 5px;
+}
+.card-front {
+    background-color: #64C5F0; transform: rotateY(0deg); color: white; font-size: 1.5rem;
+    font-weight: bold; border: 3px solid #17A2B8;
+}
+.card-back { background-color: white; transform: rotateY(180deg); border: 3px solid #FF8E9E; }
+
+/* Estilos dos botões de controle de direção para mobile (Cobrinha) */
+.dir-button {
+    width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+    background-color: #FF8E9E; color: white; font-size: 1.5rem; border-radius: 50%;
+    transition: background-color 0.1s; box-shadow: 0 3px 0 #FF607F; border-bottom: 2px solid #FF607F;
+}
+.dir-button:active { transform: translateY(2px); box-shadow: 0 1px 0 #FF607F; }
+
+.controls-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: 5px; width: 150px; height: 100px; margin-top: 10px;
+}
+#upButton { grid-area: 1 / 2 / 2 / 3; }
+#leftButton { grid-area: 2 / 1 / 3 / 2; }
+#rightButton { grid-area: 2 / 3 / 3 / 4; }
+#downButton { grid-area: 2 / 2 / 3 / 3; }
+
+/* Estilos do Jogo da Velha (Tic-Tac-Toe) */
+.ttt-cell {
+    background-color: #fcfcfc; border: 4px solid #FF8E9E; aspect-ratio: 1 / 1;
+    display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900;
+    color: #5A3E98; cursor: pointer; transition: background-color 0.1s; border-radius: 8px;
+}
+.ttt-cell:hover:not(.occupied) { background-color: #ffe4e6; }
+.ttt-cell.occupied { cursor: default; }
