@@ -12,7 +12,7 @@ const gameSelectionScreen = document.getElementById('gameSelectionScreen');
 const backToHomeButton = document.getElementById('backToHomeButton');
 let activeGame = null;
 
-// Botões de Voltar Específicos (adicionados no HTML refatorado)
+// Botões de Voltar Específicos
 const backToGameSelectionMemory = document.getElementById('backToGameSelectionMemory');
 const backToGameSelectionSnake = document.getElementById('backToGameSelectionSnake');
 const backToGameSelectionTicTacToe = document.getElementById('backToGameSelectionTicTacToe');
@@ -42,10 +42,19 @@ const snakeContainer = document.getElementById('snakeContainer');
 const snakeCanvas = document.getElementById('snakeCanvas');
 const ctxSnake = snakeCanvas.getContext('2d');
 const snakeStartButton = document.getElementById('snakeStartButton');
+const snakePauseButton = document.getElementById('snakePauseButton'); 
 const snakeStatus = document.getElementById('snakeStatus');
 const snakeScore = document.getElementById('snakeScore');
 const TILE_SIZE = 20, GRID_SIZE = 20;
 let snake = [], food = {}, dx = TILE_SIZE, dy = 0, gameLoopId, snakeCurrentScore = 0, gameIsRunning = false, gameSpeed = 250;
+const HIGHSCORE_KEY = 'snakeHighScore'; 
+let currentHighScore = 0; 
+let isPaused = false; 
+let lastDx = TILE_SIZE, lastDy = 0; 
+
+// NOVO: Flag para evitar mudanças múltiplas de direção por frame
+let directionChangedInFrame = false; 
+
 
 // --- Jogo da Velha ---
 const tictactoeContainer = document.getElementById('tictactoeContainer');
@@ -87,7 +96,7 @@ function showSpecificGame(gameName) {
     [memoryContainer, snakeContainer, tictactoeContainer].forEach(c => c.classList.add('hidden'));
 
     const containers = {
-        memory: { el: memoryContainer, title: '🧠 Jogo da Memória! 🧠', init: resetGame },
+        memory: { el: memoryContainer, title: '🧠 Jogo da Memória! 🧠', init: setupMemoryGame },
         snake: { el: snakeContainer, title: '🐍 Cobrinha Clássica! 🍎', init: initSnakeGame },
         tictactoe: { el: tictactoeContainer, title: '❌ Jogo da Velha! ⭕', init: initTicTacToeGame }
     };
@@ -110,7 +119,7 @@ function showSlate() {
 }
 
 
-// --- Lógica da Lousa Mágica ---
+// --- Lógica da Lousa Mágica (Inalterada) ---
 function setupLousa() {
     if (!ctxLousa) return;
     ctxLousa.lineJoin = 'round';
@@ -121,7 +130,6 @@ function setupLousa() {
     canvasLousa.addEventListener('mouseup', stopDrawing);
     canvasLousa.addEventListener('mouseout', stopDrawing);
 
-    // MELHORIA: Prevenção de comportamento padrão do navegador no toque
     canvasLousa.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
     canvasLousa.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
     canvasLousa.addEventListener('touchend', stopDrawing);
@@ -134,12 +142,10 @@ function resizeCanvas() {
     tempCanvas.height = canvasLousa.height;
     tempCtx.drawImage(canvasLousa, 0, 0);
 
-    // Ajusta o tamanho da canvas
     canvasLousa.width = slateSection.clientWidth;
     canvasLousa.height = Math.min(canvasLousa.width * 0.7 , window.innerHeight * 0.5);
 
-    // Redesenha o conteúdo anterior
-    ctxLousa.drawImage(tempCanvas, 0, 0);
+    tempCtx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvasLousa.width, canvasLousa.height); 
     ctxLousa.lineJoin = 'round';
     ctxLousa.lineCap = 'round';
     ctxLousa.strokeStyle = colorPicker.value;
@@ -165,19 +171,39 @@ function stopDrawing() { isDrawing = false; }
 function clearCanvas() { ctxLousa.clearRect(0, 0, canvasLousa.width, canvasLousa.height); }
 
 
-// --- Lógica do Jogo da Memória ---
-function resetGame() {
-    const gameCards = [...cardEmojis, ...cardEmojis].sort(() => 0.5 - Math.random());
+// --- Jogo da Memória (Otimizado para Performance) ---
+
+// NOVO: Cria os elementos DOM dos cards UMA ÚNICA VEZ
+function setupMemoryGame() {
+    const totalCards = [...cardEmojis, ...cardEmojis]; 
     memoryGrid.innerHTML = '';
-    cards = gameCards.map(emoji => {
+    
+    cards = totalCards.map(() => {
         const cardEl = document.createElement('div');
         cardEl.className = 'card';
-        cardEl.dataset.emoji = emoji;
-        cardEl.innerHTML = `<div class="card-face card-front">?</div><div class="card-face card-back">${emoji}</div>`;
+        cardEl.innerHTML = `<div class="card-face card-front">?</div><div class="card-face card-back"></div>`;
         cardEl.addEventListener('click', () => flipCard(cardEl));
         memoryGrid.appendChild(cardEl);
         return cardEl;
     });
+    
+    // Inicializa o jogo
+    resetGame();
+}
+
+// MELHORADO: Apenas atualiza o conteúdo e o estado dos elementos DOM existentes
+function resetGame() {
+    const gameEmojis = [...cardEmojis, ...cardEmojis].sort(() => 0.5 - Math.random());
+    
+    cards.forEach((cardEl, index) => {
+        const emoji = gameEmojis[index];
+        
+        cardEl.dataset.emoji = emoji;
+        cardEl.querySelector('.card-back').textContent = emoji; // Atualiza o emoji do verso
+
+        cardEl.classList.remove('flipped', 'match');
+    });
+    
     flippedCards = []; matchesFound = 0; isProcessing = false;
     scoreDisplay.textContent = `Pares: 0 / 8`;
     memoryGrid.classList.add('locked');
@@ -217,34 +243,105 @@ function checkForMatch() {
 }
 
 
-// --- Lógica do Jogo da Cobrinha ---
+// --- Lógica do Jogo da Cobrinha (Atualizada) ---
+
+// NOVO: Função para obter e exibir o recorde
+function getHighScore() {
+    const score = localStorage.getItem(HIGHSCORE_KEY);
+    currentHighScore = score ? parseInt(score) : 0;
+    snakeStatus.textContent = `Recorde: ${currentHighScore} | Pronto para jogar!`;
+}
+
+// ATUALIZADO: Inicialização do Jogo
 function initSnakeGame() {
     if (gameIsRunning) endGame();
+
+    snakeCanvas.width = GRID_SIZE * TILE_SIZE;
+    snakeCanvas.height = GRID_SIZE * TILE_SIZE;
+    
     snake = [{ x: 10 * TILE_SIZE, y: 10 * TILE_SIZE }];
     dx = TILE_SIZE; dy = 0; snakeCurrentScore = 0; gameIsRunning = false;
-    snakeStatus.textContent = 'Pronto para jogar!';
+    isPaused = false; 
+    
+    getHighScore(); // Carrega o recorde
     snakeScore.textContent = 'Maçãs: 0';
     snakeStartButton.textContent = '▶️ Iniciar';
     snakeStartButton.classList.remove('hidden');
+    snakePauseButton.classList.add('hidden'); // Oculta o botão de pause
+    snakePauseButton.textContent = '⏸️ Pausar';
+    
     generateFood(); drawGame();
 }
+
+// ATUALIZADO: Inicia o jogo
 function startGame() {
     if (gameIsRunning) return;
     gameIsRunning = true;
     snakeStartButton.classList.add('hidden');
+    snakePauseButton.classList.remove('hidden'); // Mostra o botão de pause
     snakeStatus.textContent = 'Use as setas para mover!';
+    
+    // CORREÇÃO: Limpa qualquer loop anterior para evitar que o jogo rode em dobro
+    if (gameLoopId) clearInterval(gameLoopId);
+    
     gameLoopId = setInterval(mainLoop, gameSpeed);
 }
+
+// ATUALIZADO: Função Principal do Jogo (Lida com Pause e a CORREÇÃO)
 function mainLoop() {
+    if (!gameIsRunning) return; 
+    if (isPaused) return;       
+
+    // CORREÇÃO: Reset do flag de direção no início de cada frame
+    directionChangedInFrame = false; 
+
     if (didGameEnd()) return endGame();
     moveSnake(); drawGame();
 }
+
+// ATUALIZADO: Função de Fim de Jogo (Lida com Recorde)
 function endGame() {
-    clearInterval(gameLoopId); gameIsRunning = false;
-    snakeStatus.textContent = `FIM DE JOGO! 😔 Pontuação: ${snakeCurrentScore}`;
+    clearInterval(gameLoopId); 
+    gameIsRunning = false;
+    
+    // Verifica e salva o recorde
+    if (snakeCurrentScore > currentHighScore) {
+        currentHighScore = snakeCurrentScore;
+        localStorage.setItem(HIGHSCORE_KEY, currentHighScore);
+        snakeStatus.textContent = `NOVO RECORDE! 🎉 ${snakeCurrentScore} Maçãs!`;
+    } else {
+        snakeStatus.textContent = `FIM DE JOGO! 😔 Pontuação: ${snakeCurrentScore} (Recorde: ${currentHighScore})`;
+    }
+    
     snakeStartButton.textContent = 'Jogar Novamente?';
     snakeStartButton.classList.remove('hidden');
+    snakePauseButton.classList.add('hidden'); // Esconde o botão de pause
 }
+
+// NOVO: Função para Pausar e Despausar (Atualiza o botão visual)
+function togglePause() {
+    if (!gameIsRunning) return;
+
+    isPaused = !isPaused;
+    
+    if (isPaused) {
+        // Salva a direção atual para retomar e zera o movimento
+        lastDx = dx;
+        lastDy = dy;
+        dx = 0;
+        dy = 0;
+        snakeStatus.textContent = "Jogo PAUSADO. Clique em Continuar.";
+        snakePauseButton.textContent = "▶️ Continuar"; // Atualiza o texto do botão
+    } else {
+        // Restaura a última direção válida
+        dx = lastDx;
+        dy = lastDy;
+        snakeStatus.textContent = "Use as setas para mover!";
+        snakePauseButton.textContent = "⏸️ Pausar"; // Atualiza o texto do botão
+    }
+    drawGame(); 
+}
+
 function drawGame() {
     ctxSnake.fillStyle = '#f0f8ff';
     ctxSnake.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
@@ -269,30 +366,81 @@ function generateFood() {
 }
 function moveSnake() {
     let headX = snake[0].x + dx, headY = snake[0].y + dy;
-    if (headX < 0) headX = snakeCanvas.width - TILE_SIZE; else if (headX >= snakeCanvas.width) headX = 0;
-    if (headY < 0) headY = snakeCanvas.height - TILE_SIZE; else if (headY >= snakeCanvas.height) headY = 0;
+    
+    // Lógica para atravessar bordas
+    if (headX < 0) headX = snakeCanvas.width - TILE_SIZE; 
+    else if (headX >= snakeCanvas.width) headX = 0;
+    if (headY < 0) headY = snakeCanvas.height - TILE_SIZE; 
+    else if (headY >= snakeCanvas.height) headY = 0;
+    
     const head = { x: headX, y: headY };
+    
     snake.unshift(head);
+    
+    // CORREÇÃO FINAL: Colisão da cobra com a comida
     if (head.x === food.x && head.y === food.y) {
         snakeCurrentScore++;
         snakeScore.textContent = `Maçãs: ${snakeCurrentScore}`;
         generateFood();
-    } else { snake.pop(); }
+    } else { 
+        // Remove o rabo apenas se a comida NÃO foi consumida
+        snake.pop(); 
+    }
 }
 function didGameEnd() { return snake.slice(1).some(p => p.x === snake[0].x && p.y === snake[0].y); }
+
+// ATUALIZADO: Controle de Direção e Pause
 function changeDirection(e) {
-    if (!gameIsRunning) return;
-    const key = e.key;
+    const key = e.key; 
+    
+    // 1. Lida com o Pause (Teclado: ESPAÇO ou ENTER)
+    if (key === ' ' || key === 'Enter') {
+        e.preventDefault(); 
+        togglePause();
+        return;
+    }
+    
+    if (!gameIsRunning || isPaused) return; 
+    
+    // CORREÇÃO: Bloqueia qualquer mudança de direção se uma já ocorreu neste frame
+    if (directionChangedInFrame) return;
+
+    // Direções atuais
     const goingUp = dy === -TILE_SIZE, goingDown = dy === TILE_SIZE;
     const goingRight = dx === TILE_SIZE, goingLeft = dx === -TILE_SIZE;
-    if (key === 'ArrowLeft' && !goingRight) { dx = -TILE_SIZE; dy = 0; }
-    else if (key === 'ArrowUp' && !goingDown) { dx = 0; dy = -TILE_SIZE; }
-    else if (key === 'ArrowRight' && !goingLeft) { dx = TILE_SIZE; dy = 0; }
-    else if (key === 'ArrowDown' && !goingUp) { dx = 0; dy = TILE_SIZE; }
+    
+    let changeApplied = false; // Flag para rastrear se o movimento foi aceito
+
+    // 2. Bloqueia a reversão de 180 graus
+    if (key === 'ArrowLeft' && !goingRight) { 
+        dx = -TILE_SIZE; 
+        dy = 0;
+        changeApplied = true;
+    }
+    else if (key === 'ArrowUp' && !goingDown) { 
+        dx = 0; 
+        dy = -TILE_SIZE; 
+        changeApplied = true;
+    }
+    else if (key === 'ArrowRight' && !goingLeft) { 
+        dx = TILE_SIZE; 
+        dy = 0; 
+        changeApplied = true;
+    }
+    else if (key === 'ArrowDown' && !goingUp) { 
+        dx = 0; 
+        dy = TILE_SIZE; 
+        changeApplied = true;
+    }
+    
+    // Aplica o flag se a direção mudou
+    if (changeApplied) {
+        directionChangedInFrame = true;
+    }
 }
 
 
-// --- Lógica do Jogo da Velha ---
+// --- Lógica do Jogo da Velha (Inalterada) ---
 function initTicTacToeGame() {
     board = Array(9).fill(''); currentPlayer = 'X'; gameActive = true;
     updateTicTacToeStatus(`Vez do Jogador ${currentPlayer} (❌)`);
@@ -329,7 +477,7 @@ function checkWinner() {
 }
 
 
-// --- Inicialização e Listeners ---
+// --- Inicialização e Listeners (Atualizados para o Pause) ---
 document.addEventListener('DOMContentLoaded', () => {
     // Navegação principal
     if (homeTitle) homeTitle.addEventListener('click', showInitialScreen);
@@ -360,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Jogo da Cobrinha
     if (snakeStartButton) snakeStartButton.addEventListener('click', () => !gameIsRunning && startGame());
+    if (snakePauseButton) snakePauseButton.addEventListener('click', togglePause); 
     document.addEventListener('keydown', changeDirection);
     // Controles Mobile
     ['up', 'down', 'left', 'right'].forEach(dir => {
@@ -371,5 +520,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tttResetButton) tttResetButton.addEventListener('click', initTicTacToeGame);
 
     showInitialScreen(); // Garante que a tela inicial seja exibida primeiro
-
 });
