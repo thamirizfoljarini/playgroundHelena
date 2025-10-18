@@ -51,8 +51,6 @@ const HIGHSCORE_KEY = 'snakeHighScore';
 let currentHighScore = 0; 
 let isPaused = false; 
 let lastDx = TILE_SIZE, lastDy = 0; 
-
-// NOVO: Flag para evitar mudanças múltiplas de direção por frame
 let directionChangedInFrame = false; 
 
 
@@ -172,8 +170,6 @@ function clearCanvas() { ctxLousa.clearRect(0, 0, canvasLousa.width, canvasLousa
 
 
 // --- Jogo da Memória (Otimizado para Performance) ---
-
-// NOVO: Cria os elementos DOM dos cards UMA ÚNICA VEZ
 function setupMemoryGame() {
     const totalCards = [...cardEmojis, ...cardEmojis]; 
     memoryGrid.innerHTML = '';
@@ -187,20 +183,15 @@ function setupMemoryGame() {
         return cardEl;
     });
     
-    // Inicializa o jogo
     resetGame();
 }
-
-// MELHORADO: Apenas atualiza o conteúdo e o estado dos elementos DOM existentes
 function resetGame() {
     const gameEmojis = [...cardEmojis, ...cardEmojis].sort(() => 0.5 - Math.random());
     
     cards.forEach((cardEl, index) => {
         const emoji = gameEmojis[index];
-        
         cardEl.dataset.emoji = emoji;
-        cardEl.querySelector('.card-back').textContent = emoji; // Atualiza o emoji do verso
-
+        cardEl.querySelector('.card-back').textContent = emoji;
         cardEl.classList.remove('flipped', 'match');
     });
     
@@ -245,66 +236,70 @@ function checkForMatch() {
 
 // --- Lógica do Jogo da Cobrinha (Atualizada) ---
 
-// NOVO: Função para obter e exibir o recorde
+// MELHORIA: Nova função para resetar apenas o estado do jogo
+function resetSnakeState() {
+    snake = [{ x: 10 * TILE_SIZE, y: 10 * TILE_SIZE }];
+    dx = TILE_SIZE; dy = 0;
+    snakeCurrentScore = 0;
+    isPaused = false; 
+    
+    snakeScore.textContent = 'Maçãs: 0';
+    snakePauseButton.textContent = '⏸️ Pausar';
+    
+    generateFood();
+}
+
 function getHighScore() {
     const score = localStorage.getItem(HIGHSCORE_KEY);
     currentHighScore = score ? parseInt(score) : 0;
     snakeStatus.textContent = `Recorde: ${currentHighScore} | Pronto para jogar!`;
 }
 
-// ATUALIZADO: Inicialização do Jogo
 function initSnakeGame() {
     if (gameIsRunning) endGame();
 
     snakeCanvas.width = GRID_SIZE * TILE_SIZE;
     snakeCanvas.height = GRID_SIZE * TILE_SIZE;
     
-    snake = [{ x: 10 * TILE_SIZE, y: 10 * TILE_SIZE }];
-    dx = TILE_SIZE; dy = 0; snakeCurrentScore = 0; gameIsRunning = false;
-    isPaused = false; 
+    gameIsRunning = false;
+    resetSnakeState(); // Usa a nova função de reset
     
-    getHighScore(); // Carrega o recorde
-    snakeScore.textContent = 'Maçãs: 0';
+    getHighScore();
     snakeStartButton.textContent = '▶️ Iniciar';
     snakeStartButton.classList.remove('hidden');
-    snakePauseButton.classList.add('hidden'); // Oculta o botão de pause
-    snakePauseButton.textContent = '⏸️ Pausar';
+    snakePauseButton.classList.add('hidden');
     
-    generateFood(); drawGame();
+    drawGame();
 }
 
-// ATUALIZADO: Inicia o jogo
+// CORREÇÃO: A função de iniciar o jogo agora também reseta o estado
 function startGame() {
     if (gameIsRunning) return;
+    
+    resetSnakeState(); // Garante que o jogo comece do zero
+    
     gameIsRunning = true;
     snakeStartButton.classList.add('hidden');
-    snakePauseButton.classList.remove('hidden'); // Mostra o botão de pause
+    snakePauseButton.classList.remove('hidden');
     snakeStatus.textContent = 'Use as setas para mover!';
     
-    // CORREÇÃO: Limpa qualquer loop anterior para evitar que o jogo rode em dobro
     if (gameLoopId) clearInterval(gameLoopId);
     
     gameLoopId = setInterval(mainLoop, gameSpeed);
 }
 
-// ATUALIZADO: Função Principal do Jogo (Lida com Pause e a CORREÇÃO)
 function mainLoop() {
-    if (!gameIsRunning) return; 
-    if (isPaused) return;       
+    if (!gameIsRunning || isPaused) return;       
 
-    // CORREÇÃO: Reset do flag de direção no início de cada frame
     directionChangedInFrame = false; 
-
     if (didGameEnd()) return endGame();
     moveSnake(); drawGame();
 }
 
-// ATUALIZADO: Função de Fim de Jogo (Lida com Recorde)
 function endGame() {
     clearInterval(gameLoopId); 
     gameIsRunning = false;
     
-    // Verifica e salva o recorde
     if (snakeCurrentScore > currentHighScore) {
         currentHighScore = snakeCurrentScore;
         localStorage.setItem(HIGHSCORE_KEY, currentHighScore);
@@ -315,29 +310,23 @@ function endGame() {
     
     snakeStartButton.textContent = 'Jogar Novamente?';
     snakeStartButton.classList.remove('hidden');
-    snakePauseButton.classList.add('hidden'); // Esconde o botão de pause
+    snakePauseButton.classList.add('hidden');
 }
 
-// NOVO: Função para Pausar e Despausar (Atualiza o botão visual)
 function togglePause() {
     if (!gameIsRunning) return;
 
     isPaused = !isPaused;
     
     if (isPaused) {
-        // Salva a direção atual para retomar e zera o movimento
-        lastDx = dx;
-        lastDy = dy;
-        dx = 0;
-        dy = 0;
+        lastDx = dx; lastDy = dy;
+        dx = 0; dy = 0;
         snakeStatus.textContent = "Jogo PAUSADO. Clique em Continuar.";
-        snakePauseButton.textContent = "▶️ Continuar"; // Atualiza o texto do botão
+        snakePauseButton.textContent = "▶️ Continuar";
     } else {
-        // Restaura a última direção válida
-        dx = lastDx;
-        dy = lastDy;
+        dx = lastDx; dy = lastDy;
         snakeStatus.textContent = "Use as setas para mover!";
-        snakePauseButton.textContent = "⏸️ Pausar"; // Atualiza o texto do botão
+        snakePauseButton.textContent = "⏸️ Pausar";
     }
     drawGame(); 
 }
@@ -367,7 +356,6 @@ function generateFood() {
 function moveSnake() {
     let headX = snake[0].x + dx, headY = snake[0].y + dy;
     
-    // Lógica para atravessar bordas
     if (headX < 0) headX = snakeCanvas.width - TILE_SIZE; 
     else if (headX >= snakeCanvas.width) headX = 0;
     if (headY < 0) headY = snakeCanvas.height - TILE_SIZE; 
@@ -377,66 +365,38 @@ function moveSnake() {
     
     snake.unshift(head);
     
-    // CORREÇÃO FINAL: Colisão da cobra com a comida
     if (head.x === food.x && head.y === food.y) {
         snakeCurrentScore++;
         snakeScore.textContent = `Maçãs: ${snakeCurrentScore}`;
         generateFood();
     } else { 
-        // Remove o rabo apenas se a comida NÃO foi consumida
         snake.pop(); 
     }
 }
 function didGameEnd() { return snake.slice(1).some(p => p.x === snake[0].x && p.y === snake[0].y); }
 
-// ATUALIZADO: Controle de Direção e Pause
 function changeDirection(e) {
     const key = e.key; 
     
-    // 1. Lida com o Pause (Teclado: ESPAÇO ou ENTER)
     if (key === ' ' || key === 'Enter') {
         e.preventDefault(); 
         togglePause();
         return;
     }
     
-    if (!gameIsRunning || isPaused) return; 
-    
-    // CORREÇÃO: Bloqueia qualquer mudança de direção se uma já ocorreu neste frame
-    if (directionChangedInFrame) return;
+    if (!gameIsRunning || isPaused || directionChangedInFrame) return; 
 
-    // Direções atuais
     const goingUp = dy === -TILE_SIZE, goingDown = dy === TILE_SIZE;
     const goingRight = dx === TILE_SIZE, goingLeft = dx === -TILE_SIZE;
     
-    let changeApplied = false; // Flag para rastrear se o movimento foi aceito
+    let changeApplied = false;
 
-    // 2. Bloqueia a reversão de 180 graus
-    if (key === 'ArrowLeft' && !goingRight) { 
-        dx = -TILE_SIZE; 
-        dy = 0;
-        changeApplied = true;
-    }
-    else if (key === 'ArrowUp' && !goingDown) { 
-        dx = 0; 
-        dy = -TILE_SIZE; 
-        changeApplied = true;
-    }
-    else if (key === 'ArrowRight' && !goingLeft) { 
-        dx = TILE_SIZE; 
-        dy = 0; 
-        changeApplied = true;
-    }
-    else if (key === 'ArrowDown' && !goingUp) { 
-        dx = 0; 
-        dy = TILE_SIZE; 
-        changeApplied = true;
-    }
+    if (key === 'ArrowLeft' && !goingRight) { dx = -TILE_SIZE; dy = 0; changeApplied = true; }
+    else if (key === 'ArrowUp' && !goingDown) { dx = 0; dy = -TILE_SIZE; changeApplied = true; }
+    else if (key === 'ArrowRight' && !goingLeft) { dx = TILE_SIZE; dy = 0; changeApplied = true; }
+    else if (key === 'ArrowDown' && !goingUp) { dx = 0; dy = TILE_SIZE; changeApplied = true; }
     
-    // Aplica o flag se a direção mudou
-    if (changeApplied) {
-        directionChangedInFrame = true;
-    }
+    if (changeApplied) { directionChangedInFrame = true; }
 }
 
 
@@ -477,7 +437,7 @@ function checkWinner() {
 }
 
 
-// --- Inicialização e Listeners (Atualizados para o Pause) ---
+// --- Inicialização e Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
     // Navegação principal
     if (homeTitle) homeTitle.addEventListener('click', showInitialScreen);
@@ -490,7 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (backToGameSelectionSnake) backToGameSelectionSnake.addEventListener('click', showGameSelection);
     if (backToGameSelectionTicTacToe) backToGameSelectionTicTacToe.addEventListener('click', showGameSelection);
     
-    // Listeners para cards de seleção de jogo (usando event delegation)
     document.querySelectorAll('.game-card').forEach(card => {
         card.addEventListener('click', () => showSpecificGame(card.dataset.game));
     });
@@ -510,7 +469,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (snakeStartButton) snakeStartButton.addEventListener('click', () => !gameIsRunning && startGame());
     if (snakePauseButton) snakePauseButton.addEventListener('click', togglePause); 
     document.addEventListener('keydown', changeDirection);
-    // Controles Mobile
     ['up', 'down', 'left', 'right'].forEach(dir => {
         const btn = document.getElementById(`${dir}Button`);
         if(btn) btn.addEventListener('click', () => changeDirection({ key: `Arrow${dir.charAt(0).toUpperCase() + dir.slice(1)}` }));
@@ -519,5 +477,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Jogo da Velha
     if (tttResetButton) tttResetButton.addEventListener('click', initTicTacToeGame);
 
-    showInitialScreen(); // Garante que a tela inicial seja exibida primeiro
+    showInitialScreen();
 });
