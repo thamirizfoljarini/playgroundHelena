@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dia das Crianças! - Jogos e Lousa Mágica</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -98,11 +100,14 @@
             
             <div id="snakeContainer" class="game-container hidden w-full max-w-xl p-4 rounded-xl bg-white shadow-inner">
                  <button id="backToGameSelectionSnake" class="bg-title-purple hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-md mb-4">◀️ Voltar</button>
-                <p id="snakeStatus" class="text-lg font-semibold text-gray-700 mb-4 h-6 text-center">Clique em Iniciar!</p>
+                <p id="snakeStatus" class="text-lg font-semibold text-gray-700 mb-4 h-6 text-center">Recorde: 0 | Clique em Iniciar!</p>
                 <p id="snakeScore" class="text-xl font-semibold text-gray-700 mb-4 text-center">Maçãs: 0</p>
-                <canvas id="snakeCanvas" width="400" height="400" class="border-4 border-title-purple bg-blue-50 rounded-lg mx-auto block"></canvas>
+                <canvas id="snakeCanvas" class="border-4 border-title-purple bg-blue-50 rounded-lg mx-auto block"></canvas>
                 <div class="flex flex-col items-center mt-6">
-                    <button id="snakeStartButton" class="bg-snake-green hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg mb-4">▶️ Iniciar</button>
+                    <div class="flex gap-4 mb-4">
+                        <button id="snakeStartButton" class="bg-snake-green hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg">▶️ Iniciar</button>
+                        <button id="snakePauseButton" class="hidden bg-primary-pink hover:bg-snake-red text-white font-bold py-3 px-8 rounded-full shadow-lg">⏸️ Pausar</button>
+                    </div>
                     <div class="controls-grid sm:hidden">
                         <button id="upButton" class="dir-button">▲</button>
                         <button id="leftButton" class="dir-button">◀</button>
@@ -138,4 +143,3 @@
 </body>
 
 </html>
-
