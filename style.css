@@ -1,9 +1,5 @@
 /* style.css */
 
-/* Importação da fonte Inter */
-/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap'); */ 
-/* OBS: Foi movida para o <head> do HTML para melhor carregamento */
-        
 /* Fundo com gradiente suave */
 body {
     background: linear-gradient(135deg, #FFDDE1 0%, #C3E9FF 100%);
@@ -44,7 +40,12 @@ body, button, .card, .game-card, .ttt-cell {
 .btn-base:active { transform: translateY(2px); box-shadow: 0 2px 0 #5A3E98; }
 
 /* Animação para o título */
-.title-text { display: inline-block; animation: bounceIn 0.8s ease-out; }
+.title-text { 
+    display: inline-block; 
+    animation: bounceIn 0.8s ease-out; 
+    /* MELHORIA DE PERFORMANCE: Sugere ao navegador que otimize a propriedade 'transform' (aceleração por hardware) */
+    will-change: transform;
+}
 
 @keyframes bounceIn {
     0% { opacity: 0; transform: scale(0.3); }
@@ -126,32 +127,25 @@ body, button, .card, .game-card, .ttt-cell {
 
 /* Ajusta o container da Lousa e Cobrinha para usar mais espaço no celular */
 .game-container {
-    padding: 0.5rem !important; /* Reduz o padding interno do container */
-    max-width: 100% !important; /* Garante que ocupe a largura total do main-card */
+    padding: 0.5rem; 
+    max-width: 100%; 
 }
 
 /* Força o Canvas a ocupar 100% do container e resolve problemas de visualização */
 #drawingCanvas, #snakeCanvas {
-    width: 100% !important; 
-    height: auto !important;
-    
-    /* Na Lousa, queremos que ela se estique */
-    max-width: 100% !important;
-    
-    /* No Cobrinha, queremos que ele se limite a 400px, mas não atrapalhe a Lousa */
-    /* Como o container do Cobrinha (game-container) já é controlado, isso deve bastar */
-    /* Remova a margin-top fixada se estiver causando desalinhamento (não está no seu CSS atual, mas é uma verificação) */
+    width: 100%; 
+    height: auto; 
+    max-width: 100%;
     margin: 10px auto; 
     display: block; 
 }
 
 /* Ajuste específico para a Cobrinha */
 #snakeCanvas {
-    max-width: 400px; /* Limita o tamanho máximo para manter a proporção em telas grandes */
+    max-width: 400px; /* Limita o tamanho máximo para manter a proporção em telas grandes (a resolução real será definida em JS) */
 }
 
 /* Ajuste para alinhar os controles da cobrinha (se estiverem desalinhados) */
-/* O `controls-grid` está dentro de `flex-col items-center`, o que deve centralizá-lo. */
 .controls-grid {
     margin: 10px auto; /* Centraliza a grade de botões de controle */
 }
