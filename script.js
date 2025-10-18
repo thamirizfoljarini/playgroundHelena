@@ -107,13 +107,16 @@ function showSpecificGame(gameName) {
     }
 }
 
+// CORREÇÃO: Adicionado um `setTimeout` para garantir que o DOM seja atualizado antes de redimensionar o canvas.
 function showSlate() {
     stopAllGames();
     initialScreen.classList.add('hidden');
     gamesSection.classList.add('hidden');
     slateSection.classList.remove('hidden', 'flex');
     slateSection.classList.add('flex');
-    resizeCanvas();
+    
+    // Atraso mínimo (10 milissegundos) para permitir que o navegador renderize a seção.
+    setTimeout(resizeCanvas, 10);
 }
 
 
@@ -134,6 +137,9 @@ function setupLousa() {
     window.addEventListener('resize', resizeCanvas);
 }
 function resizeCanvas() {
+    // Se a seção estiver invisível, a largura será 0. Não fazemos nada.
+    if (slateSection.clientWidth === 0) return;
+    
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     tempCanvas.width = canvasLousa.width;
@@ -143,7 +149,8 @@ function resizeCanvas() {
     canvasLousa.width = slateSection.clientWidth;
     canvasLousa.height = Math.min(canvasLousa.width * 0.7 , window.innerHeight * 0.5);
 
-    tempCtx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvasLousa.width, canvasLousa.height); 
+    ctxLousa.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvasLousa.width, canvasLousa.height); 
+    
     ctxLousa.lineJoin = 'round';
     ctxLousa.lineCap = 'round';
     ctxLousa.strokeStyle = colorPicker.value;
@@ -235,8 +242,6 @@ function checkForMatch() {
 
 
 // --- Lógica do Jogo da Cobrinha (Atualizada) ---
-
-// MELHORIA: Nova função para resetar apenas o estado do jogo
 function resetSnakeState() {
     snake = [{ x: 10 * TILE_SIZE, y: 10 * TILE_SIZE }];
     dx = TILE_SIZE; dy = 0;
@@ -248,13 +253,11 @@ function resetSnakeState() {
     
     generateFood();
 }
-
 function getHighScore() {
     const score = localStorage.getItem(HIGHSCORE_KEY);
     currentHighScore = score ? parseInt(score) : 0;
     snakeStatus.textContent = `Recorde: ${currentHighScore} | Pronto para jogar!`;
 }
-
 function initSnakeGame() {
     if (gameIsRunning) endGame();
 
@@ -262,7 +265,7 @@ function initSnakeGame() {
     snakeCanvas.height = GRID_SIZE * TILE_SIZE;
     
     gameIsRunning = false;
-    resetSnakeState(); // Usa a nova função de reset
+    resetSnakeState(); 
     
     getHighScore();
     snakeStartButton.textContent = '▶️ Iniciar';
@@ -271,12 +274,10 @@ function initSnakeGame() {
     
     drawGame();
 }
-
-// CORREÇÃO: A função de iniciar o jogo agora também reseta o estado
 function startGame() {
     if (gameIsRunning) return;
     
-    resetSnakeState(); // Garante que o jogo comece do zero
+    resetSnakeState(); 
     
     gameIsRunning = true;
     snakeStartButton.classList.add('hidden');
@@ -287,7 +288,6 @@ function startGame() {
     
     gameLoopId = setInterval(mainLoop, gameSpeed);
 }
-
 function mainLoop() {
     if (!gameIsRunning || isPaused) return;       
 
@@ -295,7 +295,6 @@ function mainLoop() {
     if (didGameEnd()) return endGame();
     moveSnake(); drawGame();
 }
-
 function endGame() {
     clearInterval(gameLoopId); 
     gameIsRunning = false;
@@ -312,7 +311,6 @@ function endGame() {
     snakeStartButton.classList.remove('hidden');
     snakePauseButton.classList.add('hidden');
 }
-
 function togglePause() {
     if (!gameIsRunning) return;
 
@@ -330,7 +328,6 @@ function togglePause() {
     }
     drawGame(); 
 }
-
 function drawGame() {
     ctxSnake.fillStyle = '#f0f8ff';
     ctxSnake.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
@@ -374,7 +371,6 @@ function moveSnake() {
     }
 }
 function didGameEnd() { return snake.slice(1).some(p => p.x === snake[0].x && p.y === snake[0].y); }
-
 function changeDirection(e) {
     const key = e.key; 
     
