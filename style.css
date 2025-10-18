@@ -131,8 +131,8 @@ body, button, .card, .game-card, .ttt-cell {
     max-width: 100%; 
 }
 
-/* Força o Canvas a ocupar 100% do container e resolve problemas de visualização */
-#drawingCanvas, #snakeCanvas {
+/* CORREÇÃO: Removi #drawingCanvas desta regra para devolver o controle ao JS */
+#snakeCanvas {
     width: 100%; 
     height: auto; 
     max-width: 100%;
