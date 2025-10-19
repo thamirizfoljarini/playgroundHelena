@@ -142,7 +142,7 @@ body, button, .card, .game-card, .ttt-cell {
 
 /* Ajuste específico para a Cobrinha */
 #snakeCanvas {
-    max-width: 400px; /* Limita o tamanho máximo para manter a proporção em telas grandes (a resolução real será definida em JS) */
+    max-width: 600px; /* Limita o tamanho máximo para manter a proporção em telas grandes (a resolução real será definida em JS) */
 }
 
 /* Ajuste para alinhar os controles da cobrinha (se estiverem desalinhados) */
