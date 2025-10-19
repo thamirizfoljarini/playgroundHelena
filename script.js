@@ -27,6 +27,13 @@ const colorPicker = document.getElementById('colorPicker');
 const sizeSlider = document.getElementById('sizeSlider');
 let isDrawing = false, lastX = 0, lastY = 0;
 
+function scheduleFrame(callback) {
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+        return window.requestAnimationFrame(callback);
+    }
+    return setTimeout(callback, 16);
+}
+
 // --- Jogo da Memória ---
 const memoryContainer = document.getElementById('memoryContainer');
 const memoryGrid = document.getElementById('memoryGrid');
@@ -84,7 +91,7 @@ function showGameSelection() {
     [memoryContainer, snakeContainer, tictactoeContainer].forEach(c => c.classList.add('hidden'));
     gameSelectionScreen.classList.remove('hidden');
     backToHomeButton.classList.remove('hidden');
-    sectionTitle.textContent = '🕹️ Arcade Infantil!';
+    sectionTitle.textContent = '🕹️ Arcade!';
 }
 
 function showSpecificGame(gameName) {
@@ -107,16 +114,15 @@ function showSpecificGame(gameName) {
     }
 }
 
-// CORREÇÃO: Adicionado um `setTimeout` para garantir que o DOM seja atualizado antes de redimensionar o canvas.
 function showSlate() {
     stopAllGames();
     initialScreen.classList.add('hidden');
     gamesSection.classList.add('hidden');
     slateSection.classList.remove('hidden', 'flex');
     slateSection.classList.add('flex');
-    
-    // Atraso mínimo (10 milissegundos) para permitir que o navegador renderize a seção.
-    setTimeout(resizeCanvas, 10);
+
+    // Aguarda o próximo frame (ou um timeout curto) para garantir que o layout seja recalculado antes de redimensionar.
+    scheduleFrame(() => resizeCanvas());
 }
 
 
@@ -136,26 +142,55 @@ function setupLousa() {
     canvasLousa.addEventListener('touchend', stopDrawing);
     window.addEventListener('resize', resizeCanvas);
 }
-function resizeCanvas() {
-    // Se a seção estiver invisível, a largura será 0. Não fazemos nada.
-    if (slateSection.clientWidth === 0) return;
-    
+
+function resizeCanvas(retryAttempt) {
+    // Evita cálculos quando a lousa não está visível.
+    if (slateSection.classList.contains('hidden')) return;
+
+    const attempt = typeof retryAttempt === 'number' ? retryAttempt : 0;
+    const sectionWidth = slateSection.clientWidth;
+    const parentWidth = canvasLousa.parentElement ? canvasLousa.parentElement.clientWidth : 0;
+    const mainCardWidth = mainContent ? mainContent.clientWidth : 0;
+    const safeViewportWidth = Math.max(window.innerWidth - 32, 0);
+    const containerWidth = Math.max(sectionWidth, parentWidth, mainCardWidth);
+    const effectiveMaxWidth = containerWidth > 0
+        ? Math.min(containerWidth, safeViewportWidth || containerWidth)
+        : (safeViewportWidth || containerWidth);
+    const minimumWidth = Math.min(320, safeViewportWidth || 320);
+    const finalWidth = Math.max(effectiveMaxWidth, minimumWidth);
+
+    // Em alguns navegadores móveis o layout pode demorar um frame extra para atualizar.
+    if (!finalWidth || Number.isNaN(finalWidth)) {
+        if (attempt < 5) {
+            scheduleFrame(() => resizeCanvas(attempt + 1));
+        }
+        return;
+    }
+
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     tempCanvas.width = canvasLousa.width;
     tempCanvas.height = canvasLousa.height;
     tempCtx.drawImage(canvasLousa, 0, 0);
 
-    canvasLousa.width = slateSection.clientWidth;
-    canvasLousa.height = Math.min(canvasLousa.width * 0.7 , window.innerHeight * 0.5);
+    const targetHeight = Math.min(finalWidth * 0.85, window.innerHeight * 0.75);
 
-    ctxLousa.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvasLousa.width, canvasLousa.height); 
-    
+    canvasLousa.width = finalWidth;
+    canvasLousa.height = targetHeight;
+    canvasLousa.style.width = `${finalWidth}px`;
+    canvasLousa.style.height = `${targetHeight}px`;
+
+    ctxLousa.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvasLousa.width, canvasLousa.height);
+
     ctxLousa.lineJoin = 'round';
-    ctxLousa.lineCap = 'round';
+ctxLousa.lineCap = 'round';
+
     ctxLousa.strokeStyle = colorPicker.value;
+
     ctxLousa.lineWidth = sizeSlider.value;
+
 }
+
 function getCoords(e) {
     const rect = canvasLousa.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
